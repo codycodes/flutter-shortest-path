@@ -11,10 +11,11 @@ class GridOne extends StatefulWidget {
 class _GridOneState extends State<GridOne> {
   @override
   Widget build(BuildContext context) {
-    int numCellsWidth = 30;
-
     var size = MediaQuery.of(context).size;
     final double itemWidth = size.width;
+    int numCellsWidth = (size.width ~/ 30);
+
+
     double scale = itemWidth / numCellsWidth;
     double num = 0;
     int heights = 0;
@@ -32,7 +33,6 @@ class _GridOneState extends State<GridOne> {
 //    width = width/10;
     return new Scaffold(
       body: GridView.count(
-//        childAspectRatio: (itemWidth / itemHeight),
         crossAxisCount: numCellsWidth,
         scrollDirection: Axis.vertical,
         children: List.generate(numCellsHeight, (index) {
