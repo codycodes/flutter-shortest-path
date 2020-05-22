@@ -42,7 +42,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     return new Scaffold(
 
       appBar: new AppBar(
-        title: new Text("Grid View"),
+        title: new Text("Shortest Path Visualizer"),
         backgroundColor: uwPurple,
         bottom: new TabBar(
           controller: controller,
