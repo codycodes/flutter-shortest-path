@@ -47,8 +47,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         bottom: new TabBar(
           controller: controller,
           tabs: <Widget>[
-            new Tab(icon: new Icon(Icons.face),),
-            new Tab(icon: new Icon(Icons.image),),
+            new Tab(text: "Djikstra",),
+            new Tab(text: "A*",),
           ],
         ),
       ),
@@ -60,7 +60,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           new GridOne.GridOne()
         ],
       ),
-
     );
   }
 }

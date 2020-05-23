@@ -13,8 +13,7 @@ class _GridOneState extends State<GridOne> {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     final double itemWidth = size.width;
-    int numCellsWidth = (size.width ~/ 30);
-
+    int numCellsWidth = (size.width ~/ 40);
 
     double scale = itemWidth / numCellsWidth;
     double num = 0;
@@ -26,11 +25,37 @@ class _GridOneState extends State<GridOne> {
     }
     int numCellsHeight = (numCellsWidth * heights).toInt();
 
-//    for i in
-//    double height = (MediaQuery.of(context).size.height);
-//    double width = (MediaQuery.of(context).size.width);
-//    height = height/10;
-//    width = width/10;
+
+    List<List<String>> gridState = [ List.filled(numCellsHeight, '0') ];
+
+    // NODE class stuff
+    // Getting height is dividing by the width (undo?) and then modulus gets the col
+    List convertIndexRowCol(idx) {
+        int row = (idx/numCellsWidth).floor();
+        int col = (idx % numCellsWidth);
+//        return row;
+        return [row, col];
+    }
+
+    Color getNodeColor(number) {
+      List rowCol = convertIndexRowCol(number);
+      int minusOne = 0;
+      if (heights % 2 == 1) {
+        minusOne++;
+      }
+      if (rowCol[0] == ((heights/2)- minusOne).floor()
+      && rowCol[1] == (numCellsWidth/4)) {
+        //start
+        return Colors.blue;
+      } else if (rowCol[0] == ((heights/2)- minusOne).floor()
+      && rowCol[1] == ((numCellsWidth/4) * 3)) {
+        // end
+        return Colors.red;
+      } else {
+        return Colors.green;
+      }
+    }
+
     return new Scaffold(
       body: GridView.count(
         crossAxisCount: numCellsWidth,
@@ -39,11 +64,12 @@ class _GridOneState extends State<GridOne> {
           return new Card(
             margin: new EdgeInsets.all(1.0),
             elevation: 0,
-            color: Colors.green,
+//            color: index  == 10 ? Colors.yellow : Colors.green,
+            color: getNodeColor(index),
             child: new Container(
               child: Align(
                 alignment: Alignment.center,
-                child: new Text ("$heights",
+                child: new Text ("✨",
                 style: TextStyle(
                   fontSize: 20.0
               ),
@@ -55,6 +81,7 @@ class _GridOneState extends State<GridOne> {
         })
       )
     );
+
   }
 
 }
