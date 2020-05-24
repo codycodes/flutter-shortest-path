@@ -1,4 +1,4 @@
-import 'dart:math';
+//import 'dart:math';
 //import 'dart:collection';
 
 import 'package:flutter/material.dart';
@@ -15,42 +15,42 @@ class _GridOneState extends State<GridOne> {
 
   @override
   Widget build(BuildContext context) {
+    // get size to create appropriate sized grid
     var size = MediaQuery.of(context).size;
     final double itemWidth = size.width;
     int numCellsWidth = (size.width ~/ 40);
-
     double scale = itemWidth / numCellsWidth;
     double num = 0;
-    int heights = 0;
+    int numRows = 0;
     int topPadding = 128;
     while(num < (size.height - topPadding)) {
       num += scale;
-      heights += 1;
+      numRows += 1;
     }
-    int numCellsHeight = (numCellsWidth * heights).toInt();
+    int numCellsHeight = (numCellsWidth * numRows).toInt();
 
     List<List<Node>> createGridData() {
       // Creates a list of list of Node representing state for each cell in the grid
 
-      int minusOne = 0;
-      if (heights % 2 == 1) {
-        minusOne++;
+      int minusOneRow = 0;
+      if (numRows % 2 == 1) {
+        minusOneRow++;
       }
-      int startRow = ((heights/2) - minusOne).floor();
+      int startRow = ((numRows ~/ 2) - minusOneRow);
       int startCol = (numCellsWidth ~/ 4);
-      int endRow = ((heights/2) - minusOne).floor();
+      int endRow = ((numRows ~/ 2) - minusOneRow);
       int endCol = (numCellsWidth ~/4) * 3;
 
       List<List<Node>> gridState = [];
-      for (int row = 0; row < heights; row++) {
+      for (int row = 0; row < numRows; row++) {
         List<Node> curRow = List();
         for (int col = 0; col < numCellsWidth; col++) {
           if (row == startRow && col == startCol) {
-            curRow.add(Node(Colors.red, row, col, true, false));
+            curRow.add(Node(Colors.red, 0, row, col, true, false));
           } else if (row == endRow && col == endCol) {
-            curRow.add(Node(Colors.blue, row, col, false, true));
+            curRow.add(Node(Colors.blue, int64MaxValue, row, col, false, true));
           } else {
-            curRow.add(Node(Colors.green, row, col, false, false));
+            curRow.add(Node(Colors.green, int64MaxValue ,row, col, false, false));
           }
         }
         gridState.add(curRow);
@@ -61,7 +61,7 @@ class _GridOneState extends State<GridOne> {
     List<List<Node>> gridState = createGridData();
 
 //    minPq<HeapPriorityQueue><>
-    Map<List, int> totalCosts = Map();
+    Map<List<Node>, int> totalCosts = Map();
 
     // Getting height is dividing by the width
     // and then modulus gets the col
@@ -80,12 +80,12 @@ class _GridOneState extends State<GridOne> {
     return new Scaffold(
       body: GridView.count(
         crossAxisCount: numCellsWidth,
+        physics: NeverScrollableScrollPhysics(),
         scrollDirection: Axis.vertical,
         children: List.generate(numCellsHeight, (index) {
           return new Card(
             margin: new EdgeInsets.all(1.0),
             elevation: 0,
-//            color: index  == 10 ? Colors.yellow : Colors.green,
             color: getNodeColor(index),
             child: new Container(
               child: Align(
