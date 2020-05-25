@@ -65,7 +65,7 @@ class _GridOneState extends State<GridOne> {
 
     // Getting height is dividing by the width
     // and then modulus gets the col
-    List convertIndexRowCol(idx) {
+    List<int> convertIndexRowCol(idx) {
         int row = (idx/numCellsWidth).floor();
         int col = (idx % numCellsWidth);
         return [row, col];
@@ -73,32 +73,65 @@ class _GridOneState extends State<GridOne> {
 
     Color getNodeColor(number) {
       // TODO: this could be a map of the number to the rowcol
-      List rowCol = convertIndexRowCol(number);
+      List<int> rowCol = convertIndexRowCol(number);
       return gridState[rowCol[0]][rowCol[1]].color;
     }
 
     return new Scaffold(
       body: GridView.count(
-        crossAxisCount: numCellsWidth,
         physics: NeverScrollableScrollPhysics(),
         scrollDirection: Axis.vertical,
+        crossAxisCount: numCellsWidth,
         children: List.generate(numCellsHeight, (index) {
-          return new Card(
-            margin: new EdgeInsets.all(1.0),
-            elevation: 0,
-            color: getNodeColor(index),
-            child: new Container(
+          List<int> rowCol = convertIndexRowCol(index);
+          return new GestureDetector(
+            onTap: () => print(rowCol),
+            child: new Card(
+              margin: new EdgeInsets.all(1.0),
+              elevation: 0,
+  //            color: getNodeColor(index),
+              child: new AnimatedContainer(
+              curve: Curves.ease,
+              duration: Duration(milliseconds: 2000),
+              color: getNodeColor(index),
               child: Align(
-                alignment: Alignment.center,
-                child: new Text ("✨",
-                style: TextStyle(
-                  fontSize: 20.0
-              ),
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 1250),
+                  alignment: Alignment.center,
+                  child: new Text ("✨",
+                    style: TextStyle(
+                        fontSize: 20.0
+                    ),
+                  ),
+                ),
               ),
             ),
             ),
-          );
 
+//            new GestureDetector(
+//              onLongPress: () {
+//                setState(() {
+//                  gridState[0][0].color = Colors.purple;
+//                  print("happening!");
+//                  print(gridState[0][0].color);
+//                });
+//              },
+//            child: new AnimatedContainer(
+//              curve: Curves.ease,
+//              duration: Duration(milliseconds: 500),
+////              color: gridState[0][0].color,
+//              child: Align(
+//                alignment: Alignment.center,
+//                child: new Text ("✨",
+//                style: TextStyle(
+//                  fontSize: 20.0
+//                ),
+//              ),
+//            ),
+//            ),
+//            ),
+//          );
+          );
         })
       )
     );
