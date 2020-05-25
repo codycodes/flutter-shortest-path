@@ -15,4 +15,8 @@ class Node {
       startNode = this.startNode;
       endNode = this.endNode;
     }
+
+    setColor(color) {
+      this.color = color;
+    }
 }
