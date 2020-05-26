@@ -27,7 +27,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
-    controller = new TabController(length: 2, vsync: this);
+    controller = new TabController(length: 1, vsync: this);
     super.initState();
   }
 
@@ -47,8 +47,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         bottom: new TabBar(
           controller: controller,
           tabs: <Widget>[
-            new Tab(text: "Djikstra",),
-            new Tab(text: "A*",),
+            new Tab(text: "Dijkstra",),
           ],
         ),
       ),
@@ -57,7 +56,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         controller: controller,
         children: <Widget> [
           new GridOne.GridOne(),
-          new GridOne.GridOne()
         ],
       ),
     );
