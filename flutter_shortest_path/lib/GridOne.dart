@@ -60,11 +60,11 @@ class _GridOneState extends State<GridOne> {
         List<Node> curRow = List();
         for (int col = 0; col < numCellsWidth; col++) {
           if (row == startRow && col == startCol) {
-            curRow.add(Node(Colors.red, int64MaxValue ,row, col, false, false, false));
+            curRow.add(Node(Colors.red, int64MaxValue ,row, col, false, false, false, false, null));
           } else if (row == endRow && col == endCol) {
-            curRow.add(Node(Colors.blue, int64MaxValue ,row, col, false, false, false));
+            curRow.add(Node(Colors.blue, int64MaxValue ,row, col, false, false, false, false, null));
           } else {
-            curRow.add(Node(Colors.green, int64MaxValue ,row, col, false, false, false));
+            curRow.add(Node(Colors.green, int64MaxValue ,row, col, false, false, false, false, null));
           }
         }
         gridState.add(curRow);
@@ -173,13 +173,13 @@ class _GridOneState extends State<GridOne> {
               return new GestureDetector(
                 onTap: () =>
                     setState(() {
-                      if (gridState[rowCol[0]][rowCol[1]].isSet) {
+                      if (gridState[rowCol[0]][rowCol[1]].isWall) {
                         gridState[rowCol[0]][rowCol[1]].color = Colors.green;
                       } else if (rowCol[1] == startCol && rowCol[0] == startRow ) {
                       } else if (rowCol[0] == endRow && rowCol[1] == endCol) {
                       } else {
                         gridState[rowCol[0]][rowCol[1]].color = Colors.yellow;
-                        gridState[rowCol[0]][rowCol[1]].isSet = true;
+                        gridState[rowCol[0]][rowCol[1]].isWall = true;
                       }
                     }),
                 onLongPress: () =>
@@ -235,7 +235,7 @@ class _GridOneState extends State<GridOne> {
                     });
                   });
                 },
-                tooltip: 'Toggle Opacity',
+                tooltip: 'Clear Walls',
                 backgroundColor: uwPurple,
                 child: Icon(Icons.flip),
               ),

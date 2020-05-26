@@ -6,16 +6,20 @@ class Node {
     Color color;
     bool startNode;
     bool endNode;
-    bool isSet;
+    bool isWall;
+    bool isVisited;
+    Node prevNode;
 
-    Node(this.color, this.cost, this.row, this.col, this.startNode, this.endNode, this.isSet) {
+    Node(this.color, this.cost, this.row, this.col, this.startNode, this.endNode, this.isWall, this.isVisited, this.prevNode){
       color = this.color;
       cost = this.cost;
       row = this.row;
       col = this.col;
       startNode = this.startNode;
       endNode = this.endNode;
-      isSet = this.isSet;
+      isWall = this.isWall;
+      isVisited = this.isVisited;
+      prevNode = this.prevNode;
     }
 
     setColor(color) {
