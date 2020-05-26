@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fluttershortestpath/Home.dart';
 import 'package:fluttershortestpath/Node.dart';
 
 class GridOne extends StatefulWidget {
@@ -14,13 +15,19 @@ class GridOne extends StatefulWidget {
 //class _GridOneState extends State<GridOne> with AfterLayoutMixin<GridOne>{
 class _GridOneState extends State<GridOne> {
   // accessible to class
-  final int int64MaxValue = 9223372036854775807;
+  // defer to largest JS value (2^53-1) since dart and JS differ
+  final int int64MaxValue = 9007199254740991;
   List<List<Node>> gridState = [];
   bool _visible = false;
+  bool _loaded = false;
   int startRow;
   int startCol;
   int endRow;
   int endCol;
+  int numCellsWidth;
+  int numCells;
+  int numRows;
+  double scale;
 
   @override
   void initState() {
@@ -28,16 +35,17 @@ class _GridOneState extends State<GridOne> {
     WidgetsBinding.instance.addPostFrameCallback((_){
       var size = MediaQuery.of(context).size;
       final double itemWidth = size.width;
-      int numCellsWidth = (size.width ~/ 40);
+      numCellsWidth = (size.width ~/ 40);
       double scale = itemWidth / numCellsWidth;
       double num = 0;
-      int numRows = 0;
+      numRows = 0;
       int topPadding = 128;
       while(num < (size.height - topPadding)) {
         num += scale;
         numRows += 1;
       }
-      int numCellsHeight = (numCellsWidth * numRows).toInt();
+
+      numCells = (numCellsWidth * numRows).toInt();
       int minusOneRow = 0;
       if (numRows % 2 == 1) {
         minusOneRow++;
@@ -52,11 +60,11 @@ class _GridOneState extends State<GridOne> {
         List<Node> curRow = List();
         for (int col = 0; col < numCellsWidth; col++) {
           if (row == startRow && col == startCol) {
-            curRow.add(Node(Colors.red, int64MaxValue ,row, col, false, false));
+            curRow.add(Node(Colors.red, int64MaxValue ,row, col, false, false, false));
           } else if (row == endRow && col == endCol) {
-            curRow.add(Node(Colors.blue, int64MaxValue ,row, col, false, false));
+            curRow.add(Node(Colors.blue, int64MaxValue ,row, col, false, false, false));
           } else {
-            curRow.add(Node(Colors.green, int64MaxValue ,row, col, false, false));
+            curRow.add(Node(Colors.green, int64MaxValue ,row, col, false, false, false));
           }
         }
         gridState.add(curRow);
@@ -69,9 +77,33 @@ class _GridOneState extends State<GridOne> {
       var size = MediaQuery
           .of(context)
           .size;
+
+        numCellsWidth = (size.width ~/ 40);
+        var gl = gridState.asMap().containsKey(0);
+        if (gl && numCellsWidth > gridState[0].length) {
+          numCellsWidth = gridState[0].length;
+        }
       final double itemWidth = size.width;
-      int numCellsWidth = (size.width ~/ 40);
-      double scale = itemWidth / numCellsWidth;
+//        TODO: adapt the screen size properly!
+//    rebuild the widget with a new widget when screen size changes! https://bit.ly/2TGK605
+    if (_loaded && scale != itemWidth / numCellsWidth) {
+      return AlertDialog(
+        title: Text(
+          "Please refresh page or return to previous orientation/window size",
+          style: TextStyle(color: Colors.white),
+          ),
+        content: Text(
+          "The screen size has changed and you must refresh the page with this size or make the window its previous size to continue using the application normally.",
+          style: TextStyle(color: Colors.white),
+          ),
+        elevation: 24.0,
+        backgroundColor: uwPurple,
+//        shape: CircleBorder(),
+      );
+    } else {
+      scale = itemWidth / numCellsWidth;
+    }
+
 
       double num = 0;
       int numRows = 0;
@@ -80,7 +112,10 @@ class _GridOneState extends State<GridOne> {
         num += scale;
         numRows += 1;
       }
-      int numCellsHeight = (numCellsWidth * numRows).toInt();
+      if (gl && numRows > gridState.length) {
+        numRows = gridState.length;
+      }
+      numCells = (numCellsWidth * numRows).toInt();
 
       // and then modulus gets the col
       List<int> convertIndexRowCol(idx) {
@@ -92,8 +127,13 @@ class _GridOneState extends State<GridOne> {
       Color getNodeColor(number) {
         // TODO: this could be a map of the number to the rowcol
         List<int> rowCol = convertIndexRowCol(number);
+//        if (rowCol[0] >= gridState.length || rowCol[1] >= gridState[0].length){
+//          rowCol[0] = gridState.length-1;
+//          rowCol[1] = gridState[0].length-1;
+//          print("reset");
+//        }
         if (gridState.length == 0) {
-          return Colors.white;
+          return Colors.green;
         } else {
           return gridState
               ?.elementAt(rowCol[0])
@@ -105,7 +145,6 @@ class _GridOneState extends State<GridOne> {
       clearGrid() {
         // Clears the grid except for the start and end nodes
         for (int row = 0; row < numRows; row++) {
-          List<Node> curRow = List();
           for (int col = 0; col < numCellsWidth; col++) {
             if (row == startRow && col == startCol) {
               gridState[row][col].color = Colors.red;
@@ -118,17 +157,30 @@ class _GridOneState extends State<GridOne> {
         }
       }
 
+      dijkstra() {
+        print("GO");
+      }
+
+      _loaded = true;
+
       return new Scaffold(
         body: GridView.count(
             physics: NeverScrollableScrollPhysics(),
             scrollDirection: Axis.vertical,
             crossAxisCount: numCellsWidth,
-            children: List.generate(numCellsHeight, (index) {
+            children: List.generate(numCells, (index) {
               List<int> rowCol = convertIndexRowCol(index);
               return new GestureDetector(
                 onTap: () =>
                     setState(() {
-                      gridState[rowCol[0]][rowCol[1]].color = Colors.yellow;
+                      if (gridState[rowCol[0]][rowCol[1]].isSet) {
+                        gridState[rowCol[0]][rowCol[1]].color = Colors.green;
+                      } else if (rowCol[1] == startCol && rowCol[0] == startRow ) {
+                      } else if (rowCol[0] == endRow && rowCol[1] == endCol) {
+                      } else {
+                        gridState[rowCol[0]][rowCol[1]].color = Colors.yellow;
+                        gridState[rowCol[0]][rowCol[1]].isSet = true;
+                      }
                     }),
                 onLongPress: () =>
                     setState(() {
@@ -148,8 +200,9 @@ class _GridOneState extends State<GridOne> {
                         child: new AnimatedOpacity(
                           opacity: _visible ? 1.0 : 0.0,
                           curve: Curves.easeInOut,
-                          duration: Duration(milliseconds: 350),
-                          child: new Text ("✨",
+                          duration: Duration(milliseconds: 1000),
+                          child: new Text (
+                            index % 2 == 0 ? "🧹" : "✨",
                             style: TextStyle(
                                 fontSize: 20.0
                             ),
@@ -162,19 +215,46 @@ class _GridOneState extends State<GridOne> {
               );
             })
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            // Call setState. This tells Flutter to rebuild the
-            // UI with the changes.
-            setState(() {
-              _visible = !_visible;
-              clearGrid();
-            });
-          },
-          tooltip: 'Toggle Opacity',
-          child: Icon(Icons.flip),
-        ),
-
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              FloatingActionButton(
+                onPressed: () {
+                  // Call setState. This tells Flutter to rebuild the
+                  // UI with the changes.
+                  setState(() {
+                    _visible = !_visible;
+                  });
+                  Future.delayed(const Duration(milliseconds: 1000), () {
+                    setState(() {
+                      _visible = !_visible;
+                      clearGrid();
+                    });
+                  });
+                },
+                tooltip: 'Toggle Opacity',
+                backgroundColor: uwPurple,
+                child: Icon(Icons.flip),
+              ),
+              FloatingActionButton(
+                onPressed: () {
+                  // Call setState. This tells Flutter to rebuild the
+                  // UI with the changes.
+                  dijkstra();
+//                  setState(() {
+//                    _visible = !_visible;
+//                  });
+                },
+                tooltip: 'Go!',
+                backgroundColor: uwPurple,
+                child: Icon(Icons.directions),
+              ),
+            ]
+          )
+        )
       );
   }
 }
