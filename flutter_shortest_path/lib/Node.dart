@@ -25,4 +25,16 @@ class Node {
     setColor(color) {
       this.color = color;
     }
+
+    int compareTo(other) {
+      if(this.cost - other.cost < 0) {
+        return -1;
+      }
+      if(this.cost - other.cost > 0) {
+        return 1;
+      }
+      if(this.cost-other.cost == 0) {
+        return 0;
+      }
+    }
 }
