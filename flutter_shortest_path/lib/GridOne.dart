@@ -154,6 +154,7 @@ class _GridOneState extends State<GridOne> {
         // Clears the grid except for the start and end nodes
         for (int row = 0; row < numRows; row++) {
           for (int col = 0; col < numCellsWidth; col++) {
+            gridState[row][col].isWall = false;
             if (row == startRow && col == startCol) {
               gridState[row][col].color = Colors.red;
             } else if (row == endRow && col == endCol) {
@@ -222,17 +223,26 @@ class _GridOneState extends State<GridOne> {
 
       updateUnvisitedNeighbors(node) {
         List<Node> unvisitedNeighbors = getUnvisitedNeighbors(node);
-//        print("UNVISITED");
         for (int i = 0; i < unvisitedNeighbors.length; i++) {
-//          print("**NODE**");
-//          print(unvisitedNeighbors[i].row);
-//          print(unvisitedNeighbors[i].col);
           unvisitedNeighbors[i].cost = node.cost + 1;
-//          print(unvisitedNeighbors[i].cost);
-//          print(unvisitedNeighbors[i].color);
           unvisitedNeighbors[i].prevNode = node;
-//          print("-----");
         }
+      }
+
+      List<Node> getNodesInShortestPathOrder(Node node) {
+        List<Node> nodesInShortestPathOrder = [];
+        while (node != null) {
+          nodesInShortestPathOrder.insert(0, node);
+          setState(() {
+            if (node.row == startRow && node.col == startCol) {
+
+            } else {
+              gridState[node.row][node.col].color = Colors.white;
+            }
+          });
+          node = node.prevNode;
+        }
+        return nodesInShortestPathOrder;
       }
 
       dijkstra() {
@@ -240,6 +250,7 @@ class _GridOneState extends State<GridOne> {
 ////          TODO: determine the equality of the start/end node
 //          return false;
 //        }
+
         print("********GO");
         List<Node> visitedNodesInOrder = [];
         Node closestNode;
@@ -247,76 +258,35 @@ class _GridOneState extends State<GridOne> {
 
         gridState[startRow][startCol].cost = 0;
         while (unvisitedNodes.length > 0) {
-//          for (int i = 0; i < 700; i++) {
-//            print("I: $i");
-            sortNodesByDistance(unvisitedNodes);
-//            print("OOOOooh: ");
-//            for (int j= 0; j < 10; j++) {
-//              print(unvisitedNodes[j].cost);
-//            }
-//            print("CLOSEST UNVISIT BEFORE SET: ");
-//            print(unvisitedNodes[0].row);
-//            print(unvisitedNodes[0].col);
-//            print(unvisitedNodes[0].cost);
-            if (unvisitedNodes != null && unvisitedNodes.isNotEmpty){
-               closestNode = unvisitedNodes.removeAt(0);
-//               print("CLOSEST NODE SET");
-            }
-//            print("CLOSEST UNVISIT: ");
-//            print(unvisitedNodes[0].row);
-//            print(unvisitedNodes[0].col);
-//            print(unvisitedNodes[0].cost);
-//            print("CLOSEST: ");
-//            print(closestNode.row);
-//            print(closestNode.col);
-//            print(closestNode.cost);
-//            unvisitedNodes = shift(unvisitedNodes, 1);
-//            print("CLOSEST UNVISIT AFTER SHIFT: ");
-//            print(unvisitedNodes[0].row);
-//            print(unvisitedNodes[0].col);
-//            print(unvisitedNodes[0].cost);
-
-//            print("*****");
-  //          TODO: handle wall
-  //            if (closestNode.isWall) {
-  //            }
-            if (closestNode.cost == int64MaxValue) {
-              return visitedNodesInOrder;
-            }
-//            print("******");
-            if (closestNode.row == endRow && closestNode.col == endCol) {
-              print("WE MADE IT!");
-              return visitedNodesInOrder;
-            }
-//            print("UPDATING NEW NODES");
-            updateUnvisitedNeighbors(closestNode);
-            // Set this at the end
-            setState(() {
-              closestNode.color = Colors.black;
-              closestNode.isVisited = true;
-            });
-            visitedNodesInOrder.add(closestNode);
-//            print("NODES VISITED SO FAR");
-//            for (int i = 0; i < visitedNodesInOrder.length; i++){
-//              print(visitedNodesInOrder[i].row);
-//              print(visitedNodesInOrder[i].col);
-//              print("----");
-//            }
-//            print("CLOSEST UNVISIT AFTER SHIFT END: ");
-//            print(unvisitedNodes[0].row);
-//            print(unvisitedNodes[0].col);
-//            print(unvisitedNodes[0].cost);
-//            closestNode = null;
+          sortNodesByDistance(unvisitedNodes);
+          if (unvisitedNodes != null && unvisitedNodes.isNotEmpty) {
+            closestNode = unvisitedNodes.removeAt(0);
           }
-//          for (int i = 0; i < 3; i++) {
-//            print(unvisitedNodes[i].cost);
-//          }
-  //        }
-//        print(gridState[startRow][startCol].cost);
+          //          TODO: handle wall properly
+          if (closestNode.isWall) {
+            continue;
+          }
+          if (closestNode.cost == int64MaxValue) {
+            return visitedNodesInOrder;
+          }
+          if (closestNode.row == endRow && closestNode.col == endCol) {
+            print("WE MADE IT!");
+            getNodesInShortestPathOrder(closestNode.prevNode);
 
+            return visitedNodesInOrder;
+          }
+          updateUnvisitedNeighbors(closestNode);
+          setState(() {
+            closestNode.isVisited = true;
+            if (closestNode.row == startRow && closestNode.col == startCol) {
 
+            } else {
+              closestNode.color = Colors.black;
+            }
+          });
+          visitedNodesInOrder.add(closestNode);
+        }
       }
-
       _loaded = true;
 
       return new Scaffold(
@@ -331,6 +301,7 @@ class _GridOneState extends State<GridOne> {
                     setState(() {
                       if (gridState[rowCol[0]][rowCol[1]].isWall) {
                         gridState[rowCol[0]][rowCol[1]].color = Colors.green;
+                        gridState[rowCol[0]][rowCol[1]].isWall = false;
                       } else if (rowCol[1] == startCol && rowCol[0] == startRow ) {
                       } else if (rowCol[0] == endRow && rowCol[1] == endCol) {
                       } else {
