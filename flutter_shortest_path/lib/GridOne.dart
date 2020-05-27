@@ -20,6 +20,7 @@ class _GridOneState extends State<GridOne> {
   List<List<Node>> gridState = [];
   bool _visible = false;
   bool _loaded = false;
+  bool _loading = true;
   int startRow;
   int startCol;
   int endRow;
@@ -69,6 +70,9 @@ class _GridOneState extends State<GridOne> {
         }
         gridState.add(curRow);
       }
+      setState(() {
+        _loading = false;
+      });
     });
   }
 
@@ -84,25 +88,24 @@ class _GridOneState extends State<GridOne> {
           numCellsWidth = gridState[0].length;
         }
       final double itemWidth = size.width;
-//        TODO: adapt the screen size properly!
-//    rebuild the widget with a new widget when screen size changes! https://bit.ly/2TGK605
-    if (_loaded && scale != itemWidth / numCellsWidth) {
-      return AlertDialog(
-        title: Text(
-          "Please refresh page or return to previous orientation/window size",
-          style: TextStyle(color: Colors.white),
-          ),
-        content: Text(
-          "The screen size has changed and you must refresh the page with this size or make the window its previous size to continue using the application normally.",
-          style: TextStyle(color: Colors.white),
-          ),
-        elevation: 24.0,
-        backgroundColor: uwPurple,
-//        shape: CircleBorder(),
-      );
-    } else {
-      scale = itemWidth / numCellsWidth;
-    }
+       //        TODO: adapt the screen size properly!
+      //    rebuild the widget with a new widget when screen size changes! https://bit.ly/2TGK605
+      if (_loaded && scale != itemWidth / numCellsWidth) {
+        return AlertDialog(
+          title: Text(
+            "Please refresh page or return to previous orientation/window size",
+            style: TextStyle(color: Colors.white),
+            ),
+          content: Text(
+            "The screen size has changed and you must refresh the page with this size or make the window its previous size to continue using the application normally.",
+            style: TextStyle(color: Colors.white),
+            ),
+          elevation: 24.0,
+          backgroundColor: uwPurple,
+        );
+      } else {
+        scale = itemWidth / numCellsWidth;
+      }
 
 
       double num = 0;
@@ -127,14 +130,19 @@ class _GridOneState extends State<GridOne> {
       Color getNodeColor(number) {
         // TODO: this could be a map of the number to the rowcol
         List<int> rowCol = convertIndexRowCol(number);
-//        if (rowCol[0] >= gridState.length || rowCol[1] >= gridState[0].length){
-//          rowCol[0] = gridState.length-1;
-//          rowCol[1] = gridState[0].length-1;
-//          print("reset");
-//        }
-        if (gridState.length == 0) {
+        if (_loading || gridState.length == 0) {
+//          TODO: there has to be a better way!
+          Future.delayed(const Duration(milliseconds: 500), () {
+            return gridState
+                ?.elementAt(rowCol[0])
+                ?.elementAt(rowCol[1])
+                ?.color ?? Colors.green;
+          });
           return Colors.green;
-        } else {
+        }
+//        if (gridState.length == 0)  {
+//          return Colors.green;
+         else {
           return gridState
               ?.elementAt(rowCol[0])
               ?.elementAt(rowCol[1])
@@ -146,6 +154,7 @@ class _GridOneState extends State<GridOne> {
         // Clears the grid except for the start and end nodes
         for (int row = 0; row < numRows; row++) {
           for (int col = 0; col < numCellsWidth; col++) {
+            gridState[row][col].isWall = false;
             if (row == startRow && col == startCol) {
               gridState[row][col].color = Colors.red;
             } else if (row == endRow && col == endCol) {
@@ -157,10 +166,127 @@ class _GridOneState extends State<GridOne> {
         }
       }
 
-      dijkstra() {
-        print("GO");
+      sortNodesByDistance(unvisitedNodes) {
+        Comparator<Node> nodeComparator = (a ,b) => (a.cost.compareTo(b.cost)).toInt();
+        unvisitedNodes.sort(nodeComparator);
       }
 
+      getAllNodes() {
+        List<Node> nodes = [];
+        for (int row = 0; row < gridState.length; row++) {
+          for (int col = 0; col < gridState[0].length; col++) {
+            nodes.add(gridState[row][col]);
+          }
+        }
+        return nodes;
+      }
+
+      List<Node> getUnvisitedNeighbors(Node node) {
+        List<Node> neighbors = [];
+        int col = node.col;
+        int row = node.row;
+        if (row > 0) {
+          neighbors.add(gridState[row - 1][col]);
+//          print("Add upper");
+        }
+        if (row < gridState.length - 1) {
+          neighbors.add(gridState[row + 1][col]);
+//          print("Add lower");
+        }
+        if (col > 0) {
+          neighbors.add(gridState[row][col - 1]);
+//          print("Add left");
+        }
+        if (col < gridState[0].length - 1) {
+          neighbors.add(gridState[row][col + 1]);
+//          print("Add right");
+        }
+//        print("NEIGHBOR CHECK");
+//        for(int i = 0; i < neighbors.length; i++){
+//          print(neighbors[i].row);
+//          print(neighbors[i].col);
+//          print(neighbors[i].cost);
+//          print(neighbors[i].isVisited);
+//          print(neighbors[i].color);
+//          print("-----***");
+//        }
+        return neighbors.where((f) => !f.isVisited).toList();
+        }
+
+      List<Object> shift(List<Object> list, int v) {
+          if(list == null || list.isEmpty) {
+            return list;
+          }
+          var i = v % list.length;
+          return list.sublist(i)..addAll(list.sublist(0, i));
+      }
+
+      updateUnvisitedNeighbors(node) {
+        List<Node> unvisitedNeighbors = getUnvisitedNeighbors(node);
+        for (int i = 0; i < unvisitedNeighbors.length; i++) {
+          unvisitedNeighbors[i].cost = node.cost + 1;
+          unvisitedNeighbors[i].prevNode = node;
+        }
+      }
+
+      List<Node> getNodesInShortestPathOrder(Node node) {
+        List<Node> nodesInShortestPathOrder = [];
+        while (node != null) {
+          nodesInShortestPathOrder.insert(0, node);
+          setState(() {
+            if (node.row == startRow && node.col == startCol) {
+
+            } else {
+              gridState[node.row][node.col].color = Colors.white;
+            }
+          });
+          node = node.prevNode;
+        }
+        return nodesInShortestPathOrder;
+      }
+
+      dijkstra() {
+//        if (gridState[startRow][startCol] != null || gridState[endRow][endCol] != null) {
+////          TODO: determine the equality of the start/end node
+//          return false;
+//        }
+
+        print("********GO");
+        List<Node> visitedNodesInOrder = [];
+        Node closestNode;
+        List<Node> unvisitedNodes = getAllNodes();
+
+        gridState[startRow][startCol].cost = 0;
+        while (unvisitedNodes.length > 0) {
+          sortNodesByDistance(unvisitedNodes);
+          if (unvisitedNodes != null && unvisitedNodes.isNotEmpty) {
+            closestNode = unvisitedNodes.removeAt(0);
+          }
+          //          TODO: handle wall properly
+          if (closestNode.isWall) {
+            continue;
+          }
+          if (closestNode.cost == int64MaxValue) {
+            return visitedNodesInOrder;
+          }
+          if (closestNode.row == endRow && closestNode.col == endCol) {
+            print("WE MADE IT!");
+            getNodesInShortestPathOrder(closestNode.prevNode);
+
+            return visitedNodesInOrder;
+          }
+          updateUnvisitedNeighbors(closestNode);
+          setState(() {
+            closestNode.isVisited = true;
+            if (closestNode.row == startRow && closestNode.col == startCol) {
+
+            } else {
+              closestNode.color = Colors.black;
+            }
+          });
+          visitedNodesInOrder.add(closestNode);
+        }
+      }
       _loaded = true;
 
       return new Scaffold(
@@ -175,6 +301,7 @@ class _GridOneState extends State<GridOne> {
                     setState(() {
                       if (gridState[rowCol[0]][rowCol[1]].isWall) {
                         gridState[rowCol[0]][rowCol[1]].color = Colors.green;
+                        gridState[rowCol[0]][rowCol[1]].isWall = false;
                       } else if (rowCol[1] == startCol && rowCol[0] == startRow ) {
                       } else if (rowCol[0] == endRow && rowCol[1] == endCol) {
                       } else {
@@ -223,8 +350,6 @@ class _GridOneState extends State<GridOne> {
             children: <Widget>[
               FloatingActionButton(
                 onPressed: () {
-                  // Call setState. This tells Flutter to rebuild the
-                  // UI with the changes.
                   setState(() {
                     _visible = !_visible;
                   });
@@ -241,8 +366,6 @@ class _GridOneState extends State<GridOne> {
               ),
               FloatingActionButton(
                 onPressed: () {
-                  // Call setState. This tells Flutter to rebuild the
-                  // UI with the changes.
                   dijkstra();
 //                  setState(() {
 //                    _visible = !_visible;
