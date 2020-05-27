@@ -36,5 +36,7 @@ class Node {
       if(this.cost-other.cost == 0) {
         return 0;
       }
+      // shouldn't get here
+      return -1;
     }
 }
